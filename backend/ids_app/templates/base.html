@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>IDS / IPS Security System</title>
+
+    <!-- =========================
+         GOOGLE FONT
+    ========================== -->
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet"
+    >
+
+    <!-- =========================
+         CHART.JS
+    ========================== -->
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- =========================
+         STYLES
+    ========================== -->
+
+    <style>
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+
+            font-family: 'Poppins', sans-serif;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #0b132b,
+                    #1c2541
+                );
+
+            color: white;
+
+            min-height: 100vh;
+
+            overflow-x: hidden;
+        }
+
+        /* =========================
+           NAVBAR
+        ========================== */
+
+        .navbar {
+
+            height: 65px;
+
+            background:
+                rgba(15, 23, 42, 0.95);
+
+            backdrop-filter: blur(12px);
+
+            display: flex;
+
+            justify-content: space-between;
+
+            align-items: center;
+
+            padding: 0 30px;
+
+            border-bottom:
+                1px solid rgba(255,255,255,0.08);
+
+            position: sticky;
+
+            top: 0;
+
+            z-index: 1000;
+        }
+
+        .navbar-left {
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 12px;
+        }
+
+        .navbar h2 {
+
+            color: #38bdf8;
+
+            font-size: 24px;
+
+            font-weight: 700;
+        }
+
+        .navbar-right {
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 12px;
+
+            font-size: 14px;
+
+            color: #cbd5e1;
+        }
+
+        /* =========================
+           LIVE STATUS
+        ========================== */
+
+        .live-dot {
+
+            width: 10px;
+
+            height: 10px;
+
+            background: #22c55e;
+
+            border-radius: 50%;
+
+            animation: pulse 1.2s infinite;
+        }
+
+        @keyframes pulse {
+
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            50% {
+                transform: scale(1.4);
+                opacity: 0.5;
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        /* =========================
+           SIDEBAR
+        ========================== */
+
+        .sidebar {
+
+            position: fixed;
+
+            top: 65px;
+
+            left: 0;
+
+            width: 230px;
+
+            height: 100%;
+
+            background:
+                rgba(15, 23, 42, 0.96);
+
+            backdrop-filter: blur(12px);
+
+            padding: 25px 18px;
+
+            border-right:
+                1px solid rgba(255,255,255,0.08);
+        }
+
+        .sidebar-title {
+
+            color: #94a3b8;
+
+            font-size: 13px;
+
+            margin-bottom: 20px;
+
+            text-transform: uppercase;
+
+            letter-spacing: 1px;
+        }
+
+        .sidebar a {
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 10px;
+
+            padding: 14px 16px;
+
+            margin-bottom: 12px;
+
+            color: #cbd5e1;
+
+            text-decoration: none;
+
+            border-radius: 12px;
+
+            transition: 0.25s ease;
+
+            font-size: 15px;
+        }
+
+        .sidebar a:hover {
+
+            background: #0ea5e9;
+
+            color: black;
+
+            transform: translateX(3px);
+        }
+
+        /* =========================
+           ACTIVE NAV
+        ========================== */
+
+        .active {
+
+            background: #0ea5e9;
+
+            color: black !important;
+
+            font-weight: 600;
+        }
+
+        /* =========================
+           CONTENT AREA
+        ========================== */
+
+        .content {
+
+            margin-left: 240px;
+
+            padding: 35px;
+
+            min-height: calc(100vh - 65px);
+        }
+
+        /* =========================
+           GLOBAL CARD
+        ========================== */
+
+        .card {
+
+            background:
+                rgba(255,255,255,0.05);
+
+            border:
+                1px solid rgba(255,255,255,0.05);
+
+            border-radius: 18px;
+
+            box-shadow:
+                0 0 20px rgba(0,0,0,0.25);
+
+            backdrop-filter: blur(12px);
+        }
+
+        /* =========================
+           FOOTER
+        ========================== */
+
+        .footer {
+
+            margin-top: 50px;
+
+            text-align: center;
+
+            color: #94a3b8;
+
+            font-size: 14px;
+
+            padding-bottom: 20px;
+        }
+
+        /* =========================
+           SCROLLBAR
+        ========================== */
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 20px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+
+        /* =========================
+           RESPONSIVE
+        ========================== */
+
+        @media(max-width: 900px) {
+
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+                top: 0;
+            }
+
+            .content {
+                margin-left: 0;
+                padding: 20px;
+            }
+
+            .navbar {
+                flex-direction: column;
+                gap: 10px;
+                height: auto;
+                padding: 15px;
+            }
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<!-- =========================
+     NAVBAR
+========================= -->
+
+<div class="navbar">
+
+    <div class="navbar-left">
+
+        <h2>🚨 IDS / IPS System</h2>
+
+    </div>
+
+    <div class="navbar-right">
+
+        <div class="live-dot"></div>
+
+        <span>System Monitoring Active</span>
+
+    </div>
+
+</div>
+
+<!-- =========================
+     SIDEBAR
+========================= -->
+
+<div class="sidebar">
+
+    <div class="sidebar-title">
+        Navigation
+    </div>
+
+    <a
+        href="{% url 'dashboard' %}"
+        class="{% if request.path == '/dashboard/' %}active{% endif %}"
+    >
+        📊 Dashboard
+    </a>
+
+    <a href="#" onclick="alert('Live Traffic Module Coming Soon')">
+        📡 Live Traffic
+    </a>
+
+    <a href="#" onclick="alert('Analytics Module Coming Soon')">
+        📈 Analytics
+    </a>
+
+    <a href="#" onclick="alert('Settings Module Coming Soon')">
+        ⚙ Settings
+    </a>
+
+</div>
+
+<!-- =========================
+     MAIN CONTENT
+========================= -->
+
+<div class="content">
+
+    {% block content %}
+    {% endblock %}
+
+    <!-- =========================
+         FOOTER
+    ========================== -->
+
+    <div class="footer">
+
+        © 2026 IDS / IPS System |
+        Built by Tarun 🚀
+
+    </div>
+
+</div>
+
+</body>
+</html>
