@@ -11,15 +11,12 @@
     #alert-container {
 
         position: fixed;
-
         top: 20px;
-
         right: 20px;
 
         z-index: 9999;
 
         display: flex;
-
         flex-direction: column;
 
         gap: 12px;
@@ -27,7 +24,7 @@
 
     .alert-box {
 
-        min-width: 280px;
+        min-width: 300px;
 
         padding: 16px 18px;
 
@@ -36,7 +33,6 @@
         color: white;
 
         font-size: 14px;
-
         font-weight: 600;
 
         box-shadow:
@@ -78,6 +74,16 @@
             );
     }
 
+    .alert-critical {
+
+        background:
+            linear-gradient(
+                90deg,
+                #7f1d1d,
+                #dc2626
+            );
+    }
+
     @keyframes slideIn {
 
         from {
@@ -110,7 +116,7 @@
 
     .dashboard-header h1 {
 
-        font-size: 40px;
+        font-size: 42px;
 
         font-weight: 700;
 
@@ -139,7 +145,6 @@
         flex-wrap: wrap;
 
         margin-top: 20px;
-
         margin-bottom: 25px;
     }
 
@@ -158,7 +163,6 @@
         cursor: pointer;
 
         font-size: 14px;
-
         font-weight: 600;
 
         transition: 0.3s ease;
@@ -203,21 +207,18 @@
     .secure {
 
         background: rgba(34,197,94,0.15);
-
         color: #22c55e;
     }
 
     .warning {
 
         background: rgba(250,204,21,0.15);
-
         color: #facc15;
     }
 
     .danger {
 
         background: rgba(239,68,68,0.15);
-
         color: #ef4444;
     }
 
@@ -259,7 +260,6 @@
     .stats-icon {
 
         width: 55px;
-
         height: 55px;
 
         border-radius: 50%;
@@ -267,7 +267,6 @@
         display: flex;
 
         justify-content: center;
-
         align-items: center;
 
         font-size: 24px;
@@ -343,7 +342,6 @@
         position: relative;
 
         width: 100%;
-
         height: 240px;
     }
 
@@ -436,7 +434,9 @@
 
     .ALLOW,
     .BLOCK,
-    .MONITOR {
+    .MONITOR,
+    .TEMP_BAN,
+    .CRITICAL_ALERT {
 
         padding: 6px 12px;
 
@@ -460,23 +460,28 @@
         color: #facc15;
     }
 
+    .TEMP_BAN {
+        background: rgba(249,115,22,0.15);
+        color: #fb923c;
+    }
+
+    .CRITICAL_ALERT {
+        background: rgba(127,29,29,0.15);
+        color: #f87171;
+    }
+
 </style>
 
-<!-- ALERTS -->
-
 <div id="alert-container"></div>
-
-<!-- HEADER -->
 
 <div class="dashboard-header">
 
     <h1>
-        🚨 IDS / IPS Security Dashboard
+        🚨 AI IDS / IPS Security Dashboard
     </h1>
 
     <p>
-        Real-Time Intrusion Detection &
-        Prevention Monitoring
+        Autonomous AI Cyber Defense Monitoring Platform
     </p>
 
     <div
@@ -490,8 +495,6 @@
     </div>
 
 </div>
-
-<!-- CONTROLS -->
 
 <div class="control-panel">
 
@@ -509,8 +512,6 @@
 
 </div>
 
-<!-- STATS -->
-
 <div class="stats-grid">
 
     <div class="stats-card">
@@ -527,16 +528,16 @@
 
         <div class="stats-info">
             <h2 id="allow-count">0</h2>
-            <p>Allowed Traffic</p>
+            <p>Allowed</p>
         </div>
     </div>
 
     <div class="stats-card">
-        <div class="stats-icon red-bg">❌</div>
+        <div class="stats-icon red-bg">🚫</div>
 
         <div class="stats-info">
             <h2 id="block-count">0</h2>
-            <p>Blocked Threats</p>
+            <p>Blocked</p>
         </div>
     </div>
 
@@ -550,8 +551,6 @@
     </div>
 
 </div>
-
-<!-- CHARTS -->
 
 <div class="chart-grid">
 
@@ -567,7 +566,7 @@
 
     <div class="chart-card">
 
-        <h3>🛡 Action Distribution</h3>
+        <h3>🧠 AI Decision Distribution</h3>
 
         <div class="chart-container">
             <canvas id="actionChart"></canvas>
@@ -576,8 +575,6 @@
     </div>
 
 </div>
-
-<!-- FILTERS -->
 
 <div class="filter-section">
 
@@ -589,16 +586,16 @@
 
     <select id="actionFilter">
 
-        <option value="ALL">All Actions</option>
+        <option value="ALL">All Decisions</option>
         <option value="ALLOW">ALLOW</option>
         <option value="BLOCK">BLOCK</option>
         <option value="MONITOR">MONITOR</option>
+        <option value="TEMP BAN">TEMP BAN</option>
+        <option value="CRITICAL ALERT">CRITICAL ALERT</option>
 
     </select>
 
 </div>
-
-<!-- TABLE -->
 
 <div class="table-wrapper">
 
@@ -607,11 +604,14 @@
         <thead>
 
             <tr>
-                <th>Timestamp</th>
-                <th>Attack Type</th>
+
+                <th>Time</th>
+                <th>Attack</th>
+                <th>Severity</th>
                 <th>Confidence</th>
-                <th>Action</th>
-                <th>Actions</th>
+                <th>Decision</th>
+                <th>Delete</th>
+
             </tr>
 
         </thead>
@@ -635,7 +635,7 @@
     // LIVE ALERTS
     // =========================
 
-    function showAlert(action, attackType) {
+    function showAlert(decision, attackType) {
 
         const container =
             document.getElementById(
@@ -648,26 +648,35 @@
         let alertClass = '';
         let message = '';
 
-        if (action === "BLOCK") {
+        if (
+            decision === "BLOCK"
+            ||
+            decision === "TEMP BAN"
+            ||
+            decision === "CRITICAL ALERT"
+        ) {
 
             alertClass = 'alert-block';
 
             message =
-                `🚨 BLOCKED: ${attackType}`;
+                `🚨 ${decision}: ${attackType}`;
 
-        } else if (action === "MONITOR") {
+        }
+
+        else if (decision === "MONITOR") {
 
             alertClass = 'alert-monitor';
 
             message =
-                `⚠ Suspicious: ${attackType}`;
+                `⚠ MONITORING: ${attackType}`;
+        }
 
-        } else {
+        else {
 
             alertClass = 'alert-allow';
 
             message =
-                `✅ Allowed: ${attackType}`;
+                `✅ ALLOWED: ${attackType}`;
         }
 
         alert.className =
@@ -685,7 +694,7 @@
     }
 
     // =========================
-    // FETCH LOGS + LIVE STATS
+    // FETCH LOGS
     // =========================
 
     async function fetchLogs() {
@@ -701,8 +710,6 @@
             allLogs = data.logs || [];
 
             renderTable();
-
-            // LIVE COUNTS
 
             document.getElementById(
                 'total-count'
@@ -749,7 +756,7 @@
 
                 `/api/delete-log/${logId}/`,
                 {
-                    method: 'Delete'
+                    method: 'DELETE'
                 }
             );
 
@@ -801,17 +808,31 @@
 
                 const matchesAction =
 
-                    actionValue === "ALL" ||
+                    actionValue === "ALL"
 
-                    log.action === actionValue;
+                    ||
+
+                    log.decision === actionValue;
 
                 return (
-                    matchesSearch &&
+
+                    matchesSearch
+
+                    &&
+
                     matchesAction
                 );
             });
 
         filteredLogs.forEach(log => {
+
+            const decisionClass =
+
+                log.decision
+                    .replaceAll(
+                        ' ',
+                        '_'
+                    );
 
             table.innerHTML += `
 
@@ -821,6 +842,8 @@
 
                     <td>${log.attack_type}</td>
 
+                    <td>${log.severity}</td>
+
                     <td>
                         ${Number(log.confidence)
                             .toFixed(3)}
@@ -828,8 +851,8 @@
 
                     <td>
 
-                        <span class="${log.action}">
-                            ${log.action}
+                        <span class="${decisionClass}">
+                            ${log.decision}
                         </span>
 
                     </td>
@@ -872,9 +895,7 @@
             const data =
                 await response.json();
 
-            // =====================
             // ATTACK CHART
-            // =====================
 
             const attackLabels =
                 Object.keys(
@@ -885,20 +906,6 @@
                 Object.values(
                     data.attack_distribution || {}
                 );
-
-            const attackColors =
-                attackLabels.map(label => {
-
-                    if (
-                        label.toUpperCase()
-                        === "BENIGN"
-                    ) {
-
-                        return '#22c55e';
-                    }
-
-                    return '#ef4444';
-                });
 
             if (attackChart) {
 
@@ -925,13 +932,15 @@
                             data:
                                 attackValues,
 
-                            backgroundColor:
-                                attackColors,
+                            backgroundColor: [
 
-                            borderColor:
-                                '#0f172a',
-
-                            borderWidth: 2
+                                '#22c55e',
+                                '#ef4444',
+                                '#facc15',
+                                '#38bdf8',
+                                '#fb923c',
+                                '#a855f7'
+                            ]
                         }]
                     },
 
@@ -940,8 +949,6 @@
                         responsive: true,
 
                         maintainAspectRatio: false,
-
-                        animation: false,
 
                         plugins: {
 
@@ -957,9 +964,7 @@
                 }
             );
 
-            // =====================
-            // ACTION CHART
-            // =====================
+            // DECISION CHART
 
             const actionLabels =
                 Object.keys(
@@ -999,8 +1004,10 @@
                             backgroundColor: [
 
                                 '#22c55e',
+                                '#facc15',
                                 '#ef4444',
-                                '#facc15'
+                                '#fb923c',
+                                '#dc2626'
                             ],
 
                             borderRadius: 10
@@ -1012,8 +1019,6 @@
                         responsive: true,
 
                         maintainAspectRatio: false,
-
-                        animation: false,
 
                         plugins: {
 
@@ -1091,15 +1096,18 @@
                     'secure'
                 );
 
-            } else if (
+            }
+
+            else if (
                 data.status === "WARNING"
             ) {
 
                 banner.classList.add(
                     'warning'
                 );
+            }
 
-            } else {
+            else {
 
                 banner.classList.add(
                     'danger'
@@ -1153,9 +1161,9 @@
 
                     showAlert(
 
-                        data.result.action,
+                        data.result.decision,
 
-                        data.result.predicted_label
+                        data.result.normalized_attack
                     );
 
                     await refreshDashboard();
@@ -1201,9 +1209,9 @@
 
                                 showAlert(
 
-                                    data.result.action,
+                                    data.result.decision,
 
-                                    data.result.predicted_label
+                                    data.result.normalized_attack
                                 );
 
                                 await refreshDashboard();

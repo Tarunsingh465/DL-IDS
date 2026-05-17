@@ -1,91 +1,126 @@
+# views.py
+
 import json
 import random
 
 from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render
+from django.views.decorators.csrf import csrf_exempt
 
-from .utils import predict
 from .models import TrafficLog
+from .utils import predict
 
 
-# ===============================
-# 🔥 MAIN PREDICTION API
-# ===============================
+# =====================================
+# DASHBOARD VIEW
+# =====================================
+
+def dashboard(request):
+
+    logs = (
+        TrafficLog.objects
+        .order_by('-timestamp')[:50]
+    )
+
+    context = {
+
+        "logs":
+        logs
+    }
+
+    return render(
+
+        request,
+
+        'ids_app/dashboard.html',
+
+        context
+    )
+
+
+# =====================================
+# MAIN AI PREDICTION API
+# =====================================
 
 @csrf_exempt
 def predict_view(request):
 
-    if request.method == 'POST':
+    if request.method != "POST":
 
-        try:
+        return JsonResponse({
 
-            data = json.loads(request.body)
+            "error":
+            "POST request required"
 
-            features = data.get('features')
+        }, status=405)
 
-            # -----------------------
-            # VALIDATION
-            # -----------------------
+    try:
 
-            if not features or len(features) != 78:
+        # Parse request body
+        data = json.loads(
+            request.body
+        )
 
-                return JsonResponse({
+        features = data.get(
+            "features"
+        )
 
-                    "error":
-                    "Invalid input. Expected 78 features."
-
-                }, status=400)
-
-            # -----------------------
-            # ML PREDICTION
-            # -----------------------
-
-            result = predict(features)
-
-            # -----------------------
-            # SAVE TO DATABASE
-            # -----------------------
-
-            TrafficLog.objects.create(
-
-                predicted_label=
-                    result["predicted_label"],
-
-                confidence=
-                    result["confidence"],
-
-                action=
-                    result["action"]
-            )
-
-            return JsonResponse(result)
-
-        except Exception as e:
+        # Validate features
+        if not features:
 
             return JsonResponse({
 
-                "error": str(e)
+                "error":
+                "Features missing"
 
-            }, status=500)
+            }, status=400)
 
-    return JsonResponse({
+        if len(features) != 78:
 
-        "message": "Use POST request"
+            return JsonResponse({
 
-    })
+                "error":
+                "Expected 78 features"
+
+            }, status=400)
+
+        # AI prediction
+        result = predict(
+            features
+        )
+
+        # Save AI threat log
+        save_traffic_log(
+            result
+        )
+
+        return JsonResponse(
+
+            result,
+
+            safe=False
+        )
+
+    except Exception as e:
+
+        return JsonResponse({
+
+            "error":
+            str(e)
+
+        }, status=500)
 
 
-# ===============================
-# 🔥 RANDOM AUTO PREDICTION
-# ===============================
+# =====================================
+# AUTO GENERATE TRAFFIC
+# =====================================
 
 @csrf_exempt
 def generate_prediction(request):
 
     try:
 
-        # Generate random 78 features
+        # Generate fake traffic
         features = [
 
             random.uniform(0, 1)
@@ -93,102 +128,93 @@ def generate_prediction(request):
             for _ in range(78)
         ]
 
-        # -----------------------
-        # ML PREDICTION
-        # -----------------------
+        # AI prediction
+        result = predict(
+            features
+        )
 
-        result = predict(features)
-
-        # -----------------------
-        # SAVE TO DATABASE
-        # -----------------------
-
-        TrafficLog.objects.create(
-
-            predicted_label=
-                result["predicted_label"],
-
-            confidence=
-                result["confidence"],
-
-            action=
-                result["action"]
+        # Save log
+        save_traffic_log(
+            result
         )
 
         return JsonResponse({
 
-            "success": True,
+            "success":
+            True,
 
-            "result": result
+            "result":
+            result
         })
 
     except Exception as e:
 
         return JsonResponse({
 
-            "success": False,
+            "success":
+            False,
 
-            "error": str(e)
+            "error":
+            str(e)
 
         })
 
 
-# ===============================
-# 🔥 DASHBOARD VIEW
-# ===============================
+# =====================================
+# SAVE AI THREAT LOG
+# =====================================
 
-def dashboard(request):
+def save_traffic_log(result):
 
-    queryset = (
-        TrafficLog.objects
-        .order_by('-timestamp')
+    """
+    Save AI threat intelligence
+    into database.
+    """
+
+    TrafficLog.objects.create(
+
+        ip_address=
+        result["ip_address"],
+
+        original_attack=
+        result["original_attack"],
+
+        normalized_attack=
+        result["normalized_attack"],
+
+        confidence=
+        result["confidence"],
+
+        severity=
+        result["severity"],
+
+        decision=
+        result["decision"],
+
+        repeat_offender=
+        result["repeat_offender"],
+
+        attack_count=
+        result["attack_count"],
+
+        recommendation=
+        result["recommendation"],
+
+        explanation=
+        result["explanation"]
     )
 
-    total = queryset.count()
 
-    allow = (
-        queryset
-        .filter(action="ALLOW")
-        .count()
-    )
-
-    blocked = (
-        queryset
-        .filter(action="BLOCK")
-        .count()
-    )
-
-    monitor = (
-        queryset
-        .filter(action="MONITOR")
-        .count()
-    )
-
-    logs = queryset[:50]
-
-    context = {
-
-        "logs": logs,
-
-        "total": total,
-
-        "allow": allow,
-
-        "blocked": blocked,
-
-        "monitor": monitor
-    }
-
-    return render(
-        request,
-        'ids_app/dashboard.html',
-        context
-    )
-
+# =====================================
+# FETCH LIVE LOGS
+# =====================================
 
 def get_logs(request):
 
-    logs = TrafficLog.objects.order_by('-timestamp')
+    logs = (
+        TrafficLog.objects
+        .order_by('-timestamp')[:100]
+    )
 
     data = []
 
@@ -196,107 +222,149 @@ def get_logs(request):
 
         data.append({
 
-            "id": log.id,
+            "id":
+            log.id,
 
             "timestamp":
-                log.timestamp.strftime("%H:%M:%S"),
+            log.timestamp.strftime(
+                "%H:%M:%S"
+            ),
+
+            # --------------------------------
+            # NEW AI FIELDS
+            # --------------------------------
+
+            "ip_address":
+            log.ip_address,
 
             "attack_type":
-                log.predicted_label,
+            log.normalized_attack,
 
-            "action":
-                log.action,
+            "severity":
+            log.severity,
+
+            "decision":
+            log.decision,
 
             "confidence":
-                float(log.confidence),
-        })      
+            float(log.confidence),
+
+            "repeat_offender":
+            log.repeat_offender,
+
+            "recommendation":
+            log.recommendation,
+
+            "explanation":
+            log.explanation,
+
+            # --------------------------------
+            # BACKWARD COMPATIBILITY
+            # --------------------------------
+
+            "action":
+            log.decision
+        })
+
+    queryset = TrafficLog.objects.all()
 
     return JsonResponse({
 
-        "logs": data,
+        "logs":
+        data,
 
-        "total_logs": logs.count(),
+        "total_logs":
+        queryset.count(),
 
         "allow_count":
-            logs.filter(
-                action="ALLOW"
-            ).count(),
+
+        queryset.filter(
+            decision="ALLOW"
+        ).count(),
 
         "block_count":
-            logs.filter(
-                action="BLOCK"
-            ).count(),
+
+        queryset.filter(
+            decision="BLOCK"
+        ).count(),
 
         "monitor_count":
-            logs.filter(
-                action="MONITOR"
-            ).count()
+
+        queryset.filter(
+            decision="MONITOR"
+        ).count()
     })
 
+
+# =====================================
+# ANALYTICS API
+# =====================================
 
 def analytics_data(request):
 
     logs = TrafficLog.objects.all()
 
-    # =========================
+    # -------------------------------
     # ATTACK DISTRIBUTION
-    # =========================
+    # -------------------------------
 
-    attack_counts = {}
+    attack_distribution = {}
 
     for log in logs:
 
-        label = log.predicted_label
+        label = log.normalized_attack
 
-        if label in attack_counts:
+        attack_distribution[label] = (
 
-            attack_counts[label] += 1
+            attack_distribution.get(
+                label,
+                0
+            ) + 1
+        )
 
-        else:
+    # -------------------------------
+    # DECISION DISTRIBUTION
+    # -------------------------------
 
-            attack_counts[label] = 1
-
-    # =========================
-    # ACTION DISTRIBUTION
-    # =========================
-
-    action_counts = {
+    decision_distribution = {
 
         "ALLOW": 0,
+
+        "MONITOR": 0,
+
         "BLOCK": 0,
-        "MONITOR": 0
+
+        "TEMP BAN": 0,
+
+        "CRITICAL ALERT": 0
     }
 
     for log in logs:
 
-        if log.action == "ALLOW":
+        if log.decision in decision_distribution:
 
-            action_counts["ALLOW"] += 1
-
-        elif log.action == "BLOCK":
-
-            action_counts["BLOCK"] += 1
-
-        elif log.action == "MONITOR":
-
-            action_counts["MONITOR"] += 1
+            decision_distribution[
+                log.decision
+            ] += 1
 
     return JsonResponse({
 
         "attack_distribution":
-            attack_counts,
+        attack_distribution,
 
         "action_distribution":
-            action_counts
+        decision_distribution
     })
 
-# ===============================
-# 🔥 LIVE THREAT STATUS API
-# ===============================
+
+# =====================================
+# LIVE THREAT STATUS
+# =====================================
 
 def threat_status(request):
 
     latest_logs = (
+
         TrafficLog.objects
         .order_by('-timestamp')[:10]
     )
@@ -305,133 +373,68 @@ def threat_status(request):
 
     message = "✅ System Secure"
 
-    # ---------------------------
-    # THREAT ANALYSIS
-    # ---------------------------
-
     for log in latest_logs:
 
-        if log.action == "BLOCK":
+        if log.severity == "CRITICAL":
 
             status = "DANGER"
 
-            message = "🚨 Threat Detected"
+            message = (
+                "🚨 Critical Threat Activity"
+            )
 
             break
 
-        elif log.action == "MONITOR":
+        elif log.severity == "HIGH":
 
             status = "WARNING"
 
-            message = "⚠ Suspicious Activity"
+            message = (
+                "⚠ High Threat Activity"
+            )
 
     return JsonResponse({
 
-        "status": status,
-
-        "message": message
-    })
-# -------------------------------
-# 🔥 AUTO GENERATE PREDICTION API
-# -------------------------------
-
-def generate_prediction(request):
-
-    # Generate random 78 features
-    features = []
-
-    for _ in range(78):
-
-        value = round(
-            random.uniform(0, 1),
-            4
-        )
-
-        features.append(value)
-
-    # ML Prediction
-    result = predict(features)
-
-    # Save to database
-    TrafficLog.objects.create(
-
-        predicted_label=
-            result["predicted_label"],
-
-        confidence=
-            result["confidence"],
-
-        action=
-            result["action"]
-    )
-
-    return JsonResponse({
+        "status":
+        status,
 
         "message":
-            "Prediction generated",
-
-        "result":
-            result
+        message
     })
-# -------------------------------
-# 🔥 GENERATE RANDOM TRAFFIC
-# -------------------------------
 
-def generate_attack(request):
 
-    # 78 random features
-    features = [
-
-        random.uniform(0, 1)
-
-        for _ in range(78)
-    ]
-
-    # ML prediction
-    result = predict(features)
-
-    # Save in database
-    TrafficLog.objects.create(
-
-        predicted_label=
-            result["predicted_label"],
-
-        confidence=
-            result["confidence"],
-
-        action=
-            result["action"]
-    )
-
-    # Return JSON
-    return JsonResponse({
-
-        "predicted_label":
-            result["predicted_label"],
-
-        "confidence":
-            result["confidence"],
-
-        "action":
-            result["action"]
-    })
-from django.views.decorators.csrf import csrf_exempt
+# =====================================
+# DELETE LOG API
+# =====================================
 
 @csrf_exempt
 def delete_log(request, log_id):
 
     try:
 
-        log = TrafficLog.objects.get(id=log_id)
+        log = TrafficLog.objects.get(
+            id=log_id
+        )
 
         log.delete()
 
         return JsonResponse({
-            "message": "Log deleted successfully"
+
+            "success":
+            True,
+
+            "message":
+            "Log deleted successfully"
         })
 
     except TrafficLog.DoesNotExist:
 
         return JsonResponse({
-            "error": "Log not found"
+
+            "success":
+            False,
+
+            "error":
+            "Log not found"
+
         }, status=404)
