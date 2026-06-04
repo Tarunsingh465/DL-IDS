@@ -13,9 +13,20 @@ Responsibilities:
 - IPS decisions
 - recommendations
 - attack explanations
+- autonomous IPS orchestration
+- attacker reputation analysis
+- threat intelligence tracking
+- incident response generation
+- adaptive defense state management
+- centralized AI action logging
+- autonomous response orchestration
+- adaptive AI defense playbooks
 """
 
-# Import engines
+# --------------------------------------------------
+# IMPORT ENGINES
+# --------------------------------------------------
+
 from .severity_engine import (
     calculate_severity
 )
@@ -37,56 +48,99 @@ from .attack_normalizer import (
     normalize_attack_name
 )
 
+from .ips_engine import (
+    IPSEngine
+)
 
-# -------------------------------
-# AUTONOMOUS IPS DECISION ENGINE
-# -------------------------------
+from .reputation_engine import (
+    calculate_reputation
+)
 
-def autonomous_decision(
-    severity,
-    repeat_offender
-):
+from .threat_intelligence import (
+    ThreatIntelligenceEngine
+)
 
-    """
-    Generate autonomous IPS action.
+from .incident_response import (
+    generate_incident_report
+)
 
-    Parameters:
-    severity (str)
-    repeat_offender (bool)
+from .defensive_state_engine import (
+    DefensiveStateEngine
+)
 
-    Returns:
-    str
-    """
+from .action_logger import (
+    AIActionLogger
+)
 
-    severity = severity.upper()
+from .response_orchestrator import (
+    ResponseOrchestrator
+)
 
-    # Critical threats
-    if severity == "CRITICAL":
+from .defense_playbooks import (
+    DefensePlaybookEngine
+)
 
-        if repeat_offender:
-            return "CRITICAL ALERT"
+from .system_enforcer import (
+    SystemEnforcer
+)
 
-        return "BLOCK"
+from .enforcement_policy_engine import (
+    EnforcementPolicyEngine
+)
 
-    # High severity threats
-    if severity == "HIGH":
+from .containment_engine import (
+    ContainmentEngine
+)
 
-        if repeat_offender:
-            return "TEMP BAN"
+from .incident_action_center import (
+    IncidentActionCenter
+)
 
-        return "BLOCK"
+# --------------------------------------------------
+# GLOBAL ENGINE OBJECTS
+# --------------------------------------------------
 
-    # Medium severity threats
-    if severity == "MEDIUM":
-        return "MONITOR"
+ips_engine = IPSEngine()
 
-    # Low severity threats
-    return "ALLOW"
+system_enforcer = (
+    SystemEnforcer()
+)
 
+policy_engine = (
+    EnforcementPolicyEngine()
+)
 
-# -------------------------------
+incident_center = (
+    IncidentActionCenter()
+)
+
+threat_intelligence = (
+    ThreatIntelligenceEngine()
+)
+
+defensive_state_engine = (
+    DefensiveStateEngine()
+)
+
+action_logger = (
+    AIActionLogger()
+)
+
+response_orchestrator = (
+    ResponseOrchestrator()
+)
+
+defense_playbook_engine = (
+    DefensePlaybookEngine()
+)
+
+containment_engine = (
+    ContainmentEngine()
+)
+
+# --------------------------------------------------
 # MAIN AI ANALYSIS PIPELINE
-# -------------------------------
+# --------------------------------------------------
 
 def analyze_threat(
     ip_address,
@@ -106,23 +160,35 @@ def analyze_threat(
     dict
     """
 
-    # Normalize attack label
+    # --------------------------------------------------
+    # NORMALIZE ATTACK LABEL
+    # --------------------------------------------------
+
     normalized_attack = normalize_attack_name(
         attack_type
     )
 
-    # Update attacker memory
+    # --------------------------------------------------
+    # UPDATE ATTACKER MEMORY
+    # --------------------------------------------------
+
     attacker_info = update_attacker_memory(
         ip_address,
         normalized_attack
     )
 
-    # Repeat offender detection
+    # --------------------------------------------------
+    # REPEAT OFFENDER DETECTION
+    # --------------------------------------------------
+
     repeat_offender = is_repeat_offender(
         ip_address
     )
 
-    # Calculate severity
+    # --------------------------------------------------
+    # CALCULATE SEVERITY
+    # --------------------------------------------------
+
     severity = calculate_severity(
         attack_type=normalized_attack,
         confidence=confidence,
@@ -131,25 +197,335 @@ def analyze_threat(
         ]
     )
 
-    # Autonomous IPS decision
-    decision = autonomous_decision(
-        severity,
-        repeat_offender
+    # --------------------------------------------------
+    # CALCULATE REPUTATION
+    # --------------------------------------------------
+
+    reputation_score, reputation_level = (
+        calculate_reputation(
+            severity=severity,
+            attack_count=attacker_info[
+                "attack_count"
+            ],
+            repeat_offender=repeat_offender
+        )
     )
 
-    # Generate recommendation
+    # --------------------------------------------------
+    # UPDATE THREAT INTELLIGENCE
+    # --------------------------------------------------
+
+    threat_intelligence.update_attacker_profile(
+        ip_address=ip_address,
+        attack_type=normalized_attack,
+        severity=severity,
+        reputation_score=reputation_score,
+        reputation_level=reputation_level
+    )
+
+    # --------------------------------------------------
+    # GET ATTACKER PROFILE
+    # --------------------------------------------------
+
+    attacker_profile = (
+        threat_intelligence.get_attacker_profile(
+            ip_address
+        )
+    )
+
+    # --------------------------------------------------
+    # AUTONOMOUS IPS ENGINE DECISION
+    # --------------------------------------------------
+
+    decision = ips_engine.decide_ips_action(
+        ip_address=ip_address,
+        severity=severity,
+        attack_count=attacker_info[
+            "attack_count"
+        ],
+        attack_type=normalized_attack
+    )
+
+    # --------------------------------------------------
+    # ENFORCEMENT POLICY
+    # --------------------------------------------------
+
+    enforcement_policy = (
+
+        policy_engine.generate_policy(
+
+            attack_type=
+            normalized_attack,
+
+            severity=
+            severity,
+
+            decision=
+            decision
+        )
+    )
+
+    # --------------------------------------------------
+    # CONTAINMENT ENGINE
+    # --------------------------------------------------
+
+    containment_record = (
+
+        containment_engine
+        .apply_containment(
+
+            ip_address=
+            ip_address,
+
+            severity=
+            severity,
+
+            decision=
+            decision
+        )
+    )
+
+    # --------------------------------------------------
+    # AUTONOMOUS ENFORCEMENT
+    # --------------------------------------------------
+
+    enforcement_result = (
+
+        system_enforcer.enforce(
+
+            ip_address=ip_address,
+
+            decision=decision,
+
+            severity=severity
+        )
+    )
+    # --------------------------------------------------
+    # INCIDENT MANAGEMENT
+    # --------------------------------------------------
+
+    incident = None
+
+    if decision in [
+
+        "TEMP BAN",
+
+        "BLOCK"
+    ]:
+
+        incident = (
+
+            incident_center.create_incident(
+
+                ip_address=ip_address,
+
+                attack_type=normalized_attack,
+
+                severity=severity,
+
+                decision=decision
+            )
+        )
+
+    # --------------------------------------------------
+    # IPS STATUS CHECKS
+    # --------------------------------------------------
+
+    is_watchlisted = (
+        ip_address in ips_engine.watchlist_ips
+    )
+
+    is_temp_banned = (
+        ip_address in ips_engine.temp_banned_ips
+    )
+
+    is_blocked = (
+        ip_address in ips_engine.blocked_ips
+    )
+
+    # --------------------------------------------------
+    # EVALUATE GLOBAL DEFENSE STATE
+    # --------------------------------------------------
+
+    critical_attackers = len(
+        threat_intelligence.get_critical_attackers()
+    )
+
+    blocked_ips = len(
+        ips_engine.get_blocked_ips()
+    )
+
+    temp_banned_ips = len(
+        ips_engine.get_temp_banned_ips()
+    )
+
+    suspicious_attackers = len(
+        ips_engine.get_watchlist()
+    )
+
+    defense_state = (
+        defensive_state_engine
+        .evaluate_defense_state(
+
+            critical_attackers=
+            critical_attackers,
+
+            blocked_ips=
+            blocked_ips,
+
+            temp_banned_ips=
+            temp_banned_ips,
+
+            suspicious_attackers=
+            suspicious_attackers
+        )
+    )
+
+    # --------------------------------------------------
+    # GENERATE RECOMMENDATION
+    # --------------------------------------------------
+
     recommendation = generate_recommendation(
         attack_type=normalized_attack,
         severity=severity,
         repeat_offender=repeat_offender
     )
 
-    # Generate explanation
+    # --------------------------------------------------
+    # GENERATE EXPLANATION
+    # --------------------------------------------------
+
     explanation = generate_explanation(
         normalized_attack
     )
 
-    # Final AI intelligence response
+    # --------------------------------------------------
+    # GENERATE INCIDENT REPORT
+    # --------------------------------------------------
+
+    incident_report = (
+        generate_incident_report(
+
+            ip_address=ip_address,
+
+            attack_type=normalized_attack,
+
+            severity=severity,
+
+            reputation_level=
+            reputation_level,
+
+            decision=decision,
+
+            recommendation=
+            recommendation
+        )
+    )
+
+    # --------------------------------------------------
+    # LOG AI ACTION
+    # --------------------------------------------------
+
+    action_logger.log_action(
+
+        ip_address=ip_address,
+
+        attack_type=normalized_attack,
+
+        severity=severity,
+
+        decision=decision,
+
+        defense_state=defense_state,
+
+        reputation_level=reputation_level
+    )
+
+    # --------------------------------------------------
+    # GET RECENT AI LOGS
+    # --------------------------------------------------
+
+    recent_ai_logs = (
+        action_logger.get_recent_logs()
+    )
+
+    # --------------------------------------------------
+    # GENERATE AUTONOMOUS RESPONSE WORKFLOW
+    # --------------------------------------------------
+
+    response_workflow = (
+        response_orchestrator
+        .generate_response_workflow(
+
+            attack_type=
+            normalized_attack,
+
+            severity=
+            severity,
+
+            decision=
+            decision,
+
+            defense_state=
+            defense_state,
+
+            repeat_offender=
+            repeat_offender
+        )
+    )
+
+    # --------------------------------------------------
+    # GET RECENT RESPONSE WORKFLOWS
+    # --------------------------------------------------
+
+    recent_workflows = (
+        response_orchestrator
+        .get_recent_workflows()
+    )
+
+    # --------------------------------------------------
+    # GENERATE DEFENSE PLAYBOOK
+    # --------------------------------------------------
+
+    defense_playbook = (
+
+        defense_playbook_engine
+        .generate_playbook(
+
+            attack_type=
+            normalized_attack,
+
+            severity=
+            severity,
+
+            decision=
+            decision,
+
+            defense_state=
+            defense_state
+        )
+    )
+
+    # --------------------------------------------------
+    # GET PLAYBOOK HISTORY
+    # --------------------------------------------------
+
+    playbook_history = (
+
+        defense_playbook_engine
+        .get_playbook_history()
+    )
+
+    containment_statistics = (
+
+        containment_engine
+        .get_statistics()
+    )
+
+    # --------------------------------------------------
+    # FINAL AI INTELLIGENCE RESPONSE
+    # --------------------------------------------------
+
     response = {
 
         "ip_address":
@@ -164,11 +540,120 @@ def analyze_threat(
         "confidence":
         round(confidence, 4),
 
+        # --------------------------------------------------
+        # THREAT ANALYSIS
+        # --------------------------------------------------
+
         "severity":
         severity,
 
+        "reputation_score":
+        reputation_score,
+
+        "reputation_level":
+        reputation_level,
+
+        # --------------------------------------------------
+        # DEFENSIVE STATE
+        # --------------------------------------------------
+
+        "defense_state":
+        defense_state,
+
+        # --------------------------------------------------
+        # THREAT INTELLIGENCE
+        # --------------------------------------------------
+
+        "threat_profile":
+        attacker_profile,
+
+        # --------------------------------------------------
+        # INCIDENT RESPONSE
+        # --------------------------------------------------
+
+        "incident_report":
+        incident_report,
+
+        # --------------------------------------------------
+        # INCIDENT CENTER
+        # --------------------------------------------------
+
+        "incident":
+        incident,
+
+        "incident_statistics":
+        incident_center.get_statistics(),
+
+        # --------------------------------------------------
+        # AI ACTION LOGS
+        # --------------------------------------------------
+
+        "recent_ai_logs":
+        recent_ai_logs,
+
+        # --------------------------------------------------
+        # RESPONSE ORCHESTRATION
+        # --------------------------------------------------
+
+        "response_workflow":
+        response_workflow,
+
+        "recent_workflows":
+        recent_workflows,
+
+        # --------------------------------------------------
+        # DEFENSE PLAYBOOKS
+        # --------------------------------------------------
+
+        "defense_playbook":
+        defense_playbook,
+
+        "playbook_history":
+        playbook_history,
+
+        # --------------------------------------------------
+        # IPS DECISION
+        # --------------------------------------------------
+
         "decision":
         decision,
+        
+        # --------------------------------------------------
+        # ENFORCEMENT POLICY
+        # --------------------------------------------------
+
+        "enforcement_policy":
+        enforcement_policy,
+
+
+        # CONTAINMENT
+
+
+        "containment_record":
+        containment_record,
+
+        "containment_statistics":
+        containment_statistics,
+
+        "enforcement_result":
+        enforcement_result,
+
+        # --------------------------------------------------
+        # IPS STATUS
+        # --------------------------------------------------
+
+        "is_watchlisted":
+        is_watchlisted,
+
+        "is_temp_banned":
+        is_temp_banned,
+
+        "is_blocked":
+        is_blocked,
+
+        # --------------------------------------------------
+        # MEMORY / BEHAVIOR
+        # --------------------------------------------------
 
         "repeat_offender":
         repeat_offender,
@@ -184,6 +669,10 @@ def analyze_threat(
 
         "last_seen":
         attacker_info["last_seen"],
+
+        # --------------------------------------------------
+        # AI ANALYSIS
+        # --------------------------------------------------
 
         "recommendation":
         recommendation,

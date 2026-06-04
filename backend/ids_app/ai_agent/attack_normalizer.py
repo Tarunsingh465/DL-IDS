@@ -20,73 +20,163 @@ def normalize_attack_name(attack_type):
     str
     """
 
-    # Safety handling
+    # --------------------------------------------------
+    # SAFETY HANDLING
+    # --------------------------------------------------
+
     if not attack_type:
         return "UNKNOWN_ATTACK"
 
-    # Remove extra spaces
-    attack_type = attack_type.strip()
+    attack_type = str(attack_type).strip()
 
-    # Mapping table
+    # --------------------------------------------------
+    # ATTACK MAPPING TABLE
+    # --------------------------------------------------
+
     attack_map = {
 
-        # Normal Traffic
+        # --------------------------------------------------
+        # NORMAL TRAFFIC
+        # --------------------------------------------------
+
         "BENIGN":
         "BENIGN",
 
-        # DDoS
+        "Benign":
+        "BENIGN",
+
+        "benign":
+        "BENIGN",
+
+        # --------------------------------------------------
+        # DDOS ATTACKS
+        # --------------------------------------------------
+
         "DDoS":
         "DDOS",
 
-        # DoS Attacks
+        "DDOS":
+        "DDOS",
+
+        "ddos":
+        "DDOS",
+
+        # --------------------------------------------------
+        # PORT SCAN
+        # --------------------------------------------------
+
+        "PortScan":
+        "PORTSCAN",
+
+        "PORTSCAN":
+        "PORTSCAN",
+
+        "portscan":
+        "PORTSCAN",
+
+        # --------------------------------------------------
+        # DOS ATTACKS
+        # --------------------------------------------------
+
         "DoS GoldenEye":
+        "DOS_GOLDENEYE",
+
+        "DOS_GOLDENEYE":
         "DOS_GOLDENEYE",
 
         "DoS Hulk":
         "DOS_HULK",
 
+        "DOS_HULK":
+        "DOS_HULK",
+
         "DoS Slowhttptest":
+        "DOS_SLOWHTTPTEST",
+
+        "DOS_SLOWHTTPTEST":
         "DOS_SLOWHTTPTEST",
 
         "DoS slowloris":
         "DOS_SLOWLORIS",
 
-        # Brute Force
+        "DOS_SLOWLORIS":
+        "DOS_SLOWLORIS",
+
+        # --------------------------------------------------
+        # BRUTE FORCE
+        # --------------------------------------------------
+
         "FTP-Patator":
+        "FTP_PATATOR",
+
+        "FTP_PATATOR":
         "FTP_PATATOR",
 
         "SSH-Patator":
         "SSH_PATATOR",
 
-        # Web Attacks
+        "SSH_PATATOR":
+        "SSH_PATATOR",
+
+        # --------------------------------------------------
+        # WEB ATTACKS
+        # --------------------------------------------------
+
         "Web Attack - Brute Force":
+        "WEB_BRUTE_FORCE",
+
+        "WEB_BRUTE_FORCE":
         "WEB_BRUTE_FORCE",
 
         "Web Attack - Sql Injection":
         "WEB_SQL_INJECTION",
 
+        "WEB_SQL_INJECTION":
+        "WEB_SQL_INJECTION",
+
         "Web Attack - XSS":
         "WEB_XSS",
 
-        # Critical Exploits
+        "WEB_XSS":
+        "WEB_XSS",
+
+        # --------------------------------------------------
+        # CRITICAL EXPLOITS
+        # --------------------------------------------------
+
         "Heartbleed":
         "HEARTBLEED",
 
+        "HEARTBLEED":
+        "HEARTBLEED",
+
         "Infiltration":
+        "INFILTRATION",
+
+        "INFILTRATION":
         "INFILTRATION"
     }
 
-    # Already normalized values
-    normalized_values = set(
-        attack_map.values()
-    )
+    # --------------------------------------------------
+    # DIRECT LOOKUP
+    # --------------------------------------------------
 
-    # Prevent double normalization
-    if attack_type in normalized_values:
-        return attack_type
+    if attack_type in attack_map:
+        return attack_map[attack_type]
 
-    # Return normalized attack
-    return attack_map.get(
-        attack_type,
-        "UNKNOWN_ATTACK"
-    )
+    # --------------------------------------------------
+    # CASE-INSENSITIVE FALLBACK
+    # --------------------------------------------------
+
+    attack_upper = attack_type.upper()
+
+    for key, value in attack_map.items():
+
+        if key.upper() == attack_upper:
+            return value
+
+    # --------------------------------------------------
+    # UNKNOWN ATTACK
+    # --------------------------------------------------
+
+    return "UNKNOWN_ATTACK"
