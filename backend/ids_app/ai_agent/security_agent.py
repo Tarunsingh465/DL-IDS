@@ -96,6 +96,10 @@ from .incident_action_center import (
     IncidentActionCenter
 )
 
+from ids_app.zero_day_engine.zero_day_service import (
+    ZeroDayService
+)
+
 # --------------------------------------------------
 # GLOBAL ENGINE OBJECTS
 # --------------------------------------------------
@@ -138,6 +142,10 @@ containment_engine = (
     ContainmentEngine()
 )
 
+zero_day_service = (
+    ZeroDayService()
+)
+
 # --------------------------------------------------
 # MAIN AI ANALYSIS PIPELINE
 # --------------------------------------------------
@@ -145,7 +153,8 @@ containment_engine = (
 def analyze_threat(
     ip_address,
     attack_type,
-    confidence
+    confidence,
+    feature_vector=None
 ):
 
     """
@@ -167,6 +176,45 @@ def analyze_threat(
     normalized_attack = normalize_attack_name(
         attack_type
     )
+
+    # --------------------------------------------------
+    # PHASE 7 ZERO-DAY ANALYSIS
+    # --------------------------------------------------
+
+    zero_day_result = None
+
+    try:
+
+        import numpy as np
+
+        # Placeholder sample
+        # Real feature vector integration
+        # will come later
+
+        if feature_vector is not None:
+
+            sample = feature_vector.flatten()
+
+        else:
+
+            sample = np.random.normal(
+                0,
+                1,
+                78
+            )
+
+        zero_day_result = (
+            zero_day_service.analyze(
+                ip_address=ip_address,
+                sample=sample
+            )
+        )
+
+    except Exception as e:
+
+        zero_day_result = {
+            "error": str(e)
+        }
 
     # --------------------------------------------------
     # UPDATE ATTACKER MEMORY
@@ -678,7 +726,12 @@ def analyze_threat(
         recommendation,
 
         "explanation":
-        explanation
+        explanation,
+
+        # PHASE 7
+
+        "zero_day_analysis":
+        zero_day_result
     }
 
     return response

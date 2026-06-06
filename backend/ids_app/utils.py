@@ -189,7 +189,9 @@ def predict(features):
 
             attack_type=predicted_label,
 
-            confidence=confidence
+            confidence=confidence,
+            
+            feature_vector=features_scaled
         )
 
         return ai_response
